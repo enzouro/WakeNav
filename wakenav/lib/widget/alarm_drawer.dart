@@ -1,17 +1,25 @@
 // alarm_drawer.dart
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../models/alarm.dart';
+import 'package:uuid/uuid.dart';
 
 class AlarmDrawer extends StatefulWidget {
   final Function onCancel;
-  final Function onSave;
+  final Function(Alarm) onSave;
   final Function onStart;
+  final double latitude;
+  final double longitude;
 
   const AlarmDrawer({
     Key? key,
     required this.onCancel,
     required this.onSave,
     required this.onStart,
+    required this.latitude,
+    required this.longitude,
   }) : super(key: key);
 
   @override
@@ -20,12 +28,13 @@ class AlarmDrawer extends StatefulWidget {
 
 class _AlarmDrawerState extends State<AlarmDrawer> {
   bool _isExpanded = false;
-  bool _onEntry = true;
-  bool _onExit = false;
-  double _radius = 100.0;
+  double _distance = 100.0;
   TextEditingController _alarmNameController = TextEditingController();
   TextEditingController _noteController = TextEditingController();
   DraggableScrollableController _draggableController = DraggableScrollableController();
+
+  final double _collapsedSize = 0.4;
+  final double _expandedSize = 0.6;
 
   @override
   void initState() {
@@ -39,21 +48,67 @@ class _AlarmDrawerState extends State<AlarmDrawer> {
     _draggableController.dispose();
     super.dispose();
   }
-
   void _onDraggableChange() {
     final size = _draggableController.size;
     setState(() {
-      _isExpanded = size > 0.55; // Expanded when over 55% of the screen
+      _isExpanded = size > (_collapsedSize + _expandedSize) / 2;
     });
   }
+
+
+  void _toggleExpansion() {
+    final targetSize = _isExpanded ? _collapsedSize : _expandedSize;
+    _draggableController.animateTo(
+      targetSize,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+    setState(() {
+      _isExpanded = !_isExpanded;
+    });
+  }
+
+  Future<void> _saveAlarm() async {
+    final prefs = await SharedPreferences.getInstance();
+    final alarm = Alarm(
+      id: Uuid().v4(),
+      name: _alarmNameController.text,
+      distance: _distance,
+      note: _noteController.text,
+      latitude: widget.latitude,
+      longitude: widget.longitude,
+    );
+
+    // Get existing alarms
+    final String? alarmsJson = prefs.getString('alarms');
+    List<Alarm> alarms = [];
+    if (alarmsJson != null) {
+      final List<dynamic> decodedAlarms = jsonDecode(alarmsJson);
+      alarms = decodedAlarms.map((e) => Alarm.fromJson(e)).toList();
+    }
+
+    // Add new alarm
+    alarms.add(alarm);
+
+    // Save updated alarms list
+    await prefs.setString('alarms', jsonEncode(alarms.map((e) => e.toJson()).toList()));
+
+    // Call the onSave callback
+    widget.onSave(alarm);
+
+    // Close the drawer
+    widget.onCancel();
+  }
+
+  
 
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
       controller: _draggableController,
-      initialChildSize: 0.5,
-      minChildSize: 0.5,
-      maxChildSize: 0.6,
+      initialChildSize: _collapsedSize,
+      minChildSize: _collapsedSize,
+      maxChildSize: _expandedSize,
       builder: (_, controller) {
         return Container(
           decoration: BoxDecoration(
@@ -71,7 +126,7 @@ class _AlarmDrawerState extends State<AlarmDrawer> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(15.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -80,13 +135,7 @@ class _AlarmDrawerState extends State<AlarmDrawer> {
                       children: [
                         IconButton(
                           icon: Icon(_isExpanded ? Icons.expand_more : Icons.expand_less),
-                          onPressed: () {
-                            if (_isExpanded) {
-                              _draggableController.animateTo(0.5, duration: Duration(milliseconds: 300), curve: Curves.easeInOut);
-                            } else {
-                              _draggableController.animateTo(0.6, duration: Duration(milliseconds: 300), curve: Curves.easeInOut);
-                            }
-                          },
+                          onPressed: _toggleExpansion,  // Use the new _toggleExpansion method
                         ),
                         IconButton(
                           icon: Icon(Icons.close),
@@ -109,56 +158,25 @@ class _AlarmDrawerState extends State<AlarmDrawer> {
                         border: OutlineInputBorder(),
                       ),
                     ),
-                    SizedBox(height: 16),
-                    Text('Trigger', style: TextStyle(fontSize: 16)),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _onEntry = true;
-                              _onExit = false;
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _onEntry ? Colors.blue : Colors.grey,
-                          ),
-                          child: Text('On Entry'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _onEntry = false;
-                              _onExit = true;
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _onExit ? Colors.blue : Colors.grey,
-                          ),
-                          child: Text('On Exit'),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-                    Text('Radius: ${_radius.toStringAsFixed(0)} m', style: TextStyle(fontSize: 16)),
+                    SizedBox(height: 15),
+                    Text('Distance: ${_distance.toStringAsFixed(0)} m', style: TextStyle(fontSize: 16)),
                     Slider(
-                      value: _radius,
+                      value: _distance,
                       min: 50,
                       max: 1000,
                       divisions: 19,
                       onChanged: (value) {
                         setState(() {
-                          _radius = value;
+                          _distance = value;
                         });
                       },
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: 15),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         ElevatedButton(
-                          onPressed: () => widget.onSave(),
+                          onPressed: _saveAlarm,
                           child: Text('Save'),
                         ),
                         ElevatedButton(
@@ -168,7 +186,7 @@ class _AlarmDrawerState extends State<AlarmDrawer> {
                       ],
                     ),
                     if (_isExpanded) ...[
-                      SizedBox(height: 16),
+                      SizedBox(height: 15),
                       TextField(
                         controller: _noteController,
                         decoration: InputDecoration(

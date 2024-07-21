@@ -1,8 +1,9 @@
 // main.dart
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
-import 'track_page.dart';
-import 'navigate_page.dart';
+import 'package:wakenav/alarms_page.dart';
+import 'package:wakenav/track_page.dart';
+import 'package:wakenav/navigate_page.dart';
 
 void main() {
   runApp(WakeNavApp());
@@ -50,7 +51,7 @@ void initState() {
       initialDestination: _destination,
       initialRoute: _routePoints,
     ),
-    Placeholder(), // AlarmsPage placeholder
+    AlarmsPage(),
     Placeholder(), // SettingsPage placeholder
   ];
 }
@@ -64,6 +65,7 @@ void _onItemTapped(int index) {
       initialDestination: _destination,
       initialRoute: _routePoints,
     );
+    _pages[2] = AlarmsPage();
   });
 }
 

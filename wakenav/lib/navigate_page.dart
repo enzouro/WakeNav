@@ -5,9 +5,11 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:wakenav/models/alarm.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'widget/alarm_drawer.dart';
+
 
 class NavigatePage extends StatefulWidget {
   final Function(LatLng?, List<LatLng>?) onRouteSet;
@@ -289,10 +291,15 @@ class _NavigatePageState extends State<NavigatePage> {
               ),
             ),
           if (_showAlarmDrawer)
-            AlarmDrawer(
+           AlarmDrawer(
               onCancel: _closeAlarmDrawer,
-              onSave: _saveAlarm,
+              onSave: (Alarm alarm) {
+                // You can perform any additional actions here if needed
+                print('Alarm saved: ${alarm.name}');
+              },
               onStart: _startAlarm,
+              latitude: _destinationPosition!.latitude,
+              longitude: _destinationPosition!.longitude,
             ),
         ],
       ),
