@@ -106,7 +106,7 @@ class _MainScreenState extends State<MainScreen> {
             ),
             ListTile(
               leading: Icon(Icons.add_location),
-              title: Text('Create'),
+              title: Text('Navigate'),
               selected: _selectedIndex == 1,
               onTap: () {
                 _onItemTapped(1);
