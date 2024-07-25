@@ -19,6 +19,21 @@ class Alarm {
     this.isActive = false,
   });
 
+  // Add this method to deactivate the alarm
+  void deactivate() {
+    isActive = false;
+  }
+
+  // Add this method to activate the alarm
+  void activate() {
+    isActive = true;
+  }
+
+  // Add this method to toggle the alarm's active state
+  void toggleActive() {
+    isActive = !isActive;
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -36,10 +51,31 @@ class Alarm {
       id: json['id'],
       name: json['name'],
       distance: json['distance'],
-      note: json['note'],
+      note: json['note'] ?? '',
       latitude: json['latitude'],
       longitude: json['longitude'],
-      isActive: json['isActive'],
+      isActive: json['isActive'] ?? false,
+    );
+  }
+
+  // Add this method to create a copy of the alarm with updated fields
+  Alarm copyWith({
+    String? id,
+    String? name,
+    double? distance,
+    String? note,
+    double? latitude,
+    double? longitude,
+    bool? isActive,
+  }) {
+    return Alarm(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      distance: distance ?? this.distance,
+      note: note ?? this.note,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      isActive: isActive ?? this.isActive,
     );
   }
 }

@@ -1,10 +1,14 @@
 // main.dart
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakenav/alarms_page.dart';
 import 'package:wakenav/splash_screen.dart';
 import 'package:wakenav/track_page.dart';
 import 'package:wakenav/navigate_page.dart';
 import 'package:wakenav/models/alarm.dart';
+
 
 void main() {
   runApp(WakeNavApp());
@@ -32,6 +36,8 @@ class MainScreen extends StatefulWidget {
   _MainScreenState createState() => _MainScreenState();
 }
 
+
+
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   Alarm? _currentAlarm;
@@ -49,28 +55,85 @@ class _MainScreenState extends State<MainScreen> {
     _updatePages();  // Add this method to update the pages with the new alarm
   }
 
+  void updateAlarmStatus(Alarm alarm) {
+    setState(() {
+      if (_currentAlarm?.id == alarm.id) {
+        _currentAlarm = alarm;
+      }
+    });
+    _updateAlarmInStorage(alarm);
+  }
+
+  Future<void> _updateAlarmInStorage(Alarm alarm) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? alarmsJson = prefs.getString('alarms');
+    if (alarmsJson != null) {
+      List<Alarm> alarms = (jsonDecode(alarmsJson) as List)
+          .map((e) => Alarm.fromJson(e))
+          .toList();
+      int index = alarms.indexWhere((a) => a.id == alarm.id);
+      if (index != -1) {
+        alarms[index] = alarm;
+        await prefs.setString('alarms', jsonEncode(alarms));
+      }
+    }
+  }
+
+  void _startAlarm(Alarm alarm) {
+  setState(() {
+    _currentAlarm = alarm;
+    _selectedIndex = 0; // Switch to the TrackPage
+  });
+  _updatePages();
+  }
+
+void _stopAlarm(Alarm alarm) {
+  setState(() {
+    if (_currentAlarm?.id == alarm.id) {
+      _currentAlarm = null;
+    }
+    alarm.deactivate();
+  });
+  updateAlarmStatus(alarm);
+  _updatePages();  // Add this line
+
+}
+
   late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
     _pages = [
-      TrackPage(alarm: _currentAlarm),
+      TrackPage(    
+      alarm: _currentAlarm,
+      updateAlarmStatus: updateAlarmStatus,),
       NavigatePage(
         onRouteSet: _updateRouteInfo,
         initialAlarm: _currentAlarm,
+        updateAlarmStatus: updateAlarmStatus,
       ),
-      AlarmsPage(),
+      AlarmsPage(
+        onStartAlarm: _startAlarm,
+        onStopAlarm: _stopAlarm,
+      ),
       Placeholder(), // SettingsPage placeholder
     ];
   }
 
   void _updatePages() {
     setState(() {
-      _pages[0] = TrackPage(alarm: _currentAlarm);
+      _pages[0] = TrackPage(
+        alarm: _currentAlarm,
+        updateAlarmStatus: updateAlarmStatus,);
       _pages[1] = NavigatePage(
         onRouteSet: _updateRouteInfo,
         initialAlarm: _currentAlarm,
+        updateAlarmStatus: updateAlarmStatus,
+      );
+      _pages[2] = AlarmsPage(
+        onStartAlarm: _startAlarm,
+        onStopAlarm: _stopAlarm,
       );
     });
   }

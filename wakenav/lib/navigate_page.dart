@@ -14,11 +14,13 @@ import 'widget/alarm_drawer.dart';
 class NavigatePage extends StatefulWidget {
   final Function(Alarm?) onRouteSet;
   final Alarm? initialAlarm;
+  final Function(Alarm) updateAlarmStatus;
 
   const NavigatePage({
     Key? key, 
     required this.onRouteSet, 
-    this.initialAlarm
+    this.initialAlarm,
+    required this.updateAlarmStatus,
   }) : super(key: key);
 
   @override

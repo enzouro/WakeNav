@@ -1,9 +1,15 @@
+//alarms_page.dart
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'models/alarm.dart';
 
 class AlarmsPage extends StatefulWidget {
+  final Function(Alarm) onStartAlarm;
+  final Function(Alarm) onStopAlarm;
+
+  AlarmsPage({required this.onStartAlarm, required this.onStopAlarm});
+
   @override
   _AlarmsPageState createState() => _AlarmsPageState();
 }
@@ -42,9 +48,15 @@ class _AlarmsPageState extends State<AlarmsPage> {
 
   void _toggleAlarmActive(Alarm alarm) {
     setState(() {
-      alarm.isActive = !alarm.isActive;
+      alarm.toggleActive();
     });
     _saveAlarms();
+
+    if (alarm.isActive) {
+      widget.onStartAlarm(alarm);
+    } else {
+      widget.onStopAlarm(alarm);
+    }
   }
 
   void _editAlarm(Alarm alarm) {
@@ -97,21 +109,31 @@ class _AlarmsPageState extends State<AlarmsPage> {
                     elevation: 2,
                     margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     child: ListTile(
-                      leading: Icon(
-                        Icons.alarm,
-                        color: alarm.isActive ? Colors.blue : Colors.grey,
-                      ),
-                      title: Text(
-                        alarm.name,
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text('Distance: ${alarm.distance.toStringAsFixed(0)} m'),
-                      trailing: Switch(
-                        value: alarm.isActive,
-                        onChanged: (value) => _toggleAlarmActive(alarm),
-                      ),
-                      onTap: () => _editAlarm(alarm),
+                    leading: Icon(
+                      Icons.alarm,
+                      color: alarm.isActive ? Colors.blue : Colors.grey,
                     ),
+                    title: Text(
+                      alarm.name,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text('Distance: ${alarm.distance.toStringAsFixed(0)} m'),
+                    trailing: ElevatedButton(
+                      child: Text(alarm.isActive ? 'Stop' : 'Start'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: alarm.isActive ? Colors.red : Colors.green,
+                      ),
+                        onPressed: () {
+                        if (alarm.isActive) {
+                          widget.onStopAlarm(alarm);
+                        } else {
+                          widget.onStartAlarm(alarm);
+                        }
+                        _toggleAlarmActive(alarm);
+                      },
+                    ),
+                    onTap: () => _editAlarm(alarm),
+                  )
                   ),
                 );
               },
