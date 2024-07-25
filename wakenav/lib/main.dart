@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakenav/alarms_page.dart';
 import 'package:wakenav/splash_screen.dart';
@@ -47,14 +48,12 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  
-
   void updateStateWithAlarm(Alarm alarm) {
     setState(() {
       if (!_activeAlarms.contains(alarm)) {
         _activeAlarms.add(alarm);
       }
-      _selectedIndex = 0;  // Switch to the TrackPage
+      _selectedIndex = 0; // Switch to the TrackPage
     });
     _updatePages();
   }
@@ -66,22 +65,22 @@ class _MainScreenState extends State<MainScreen> {
     _updatePages();
   }
 
-void updateAlarmStatus(Alarm alarm) {
-  setState(() {
-    int index = _activeAlarms.indexWhere((a) => a.id == alarm.id);
-    if (index != -1) {
-      if (alarm.isActive) {
-        _activeAlarms[index] = alarm;
-      } else {
-        _activeAlarms.removeAt(index);
+  void updateAlarmStatus(Alarm alarm) {
+    setState(() {
+      int index = _activeAlarms.indexWhere((a) => a.id == alarm.id);
+      if (index != -1) {
+        if (alarm.isActive) {
+          _activeAlarms[index] = alarm;
+        } else {
+          _activeAlarms.removeAt(index);
+        }
+      } else if (alarm.isActive) {
+        _activeAlarms.add(alarm);
       }
-    } else if (alarm.isActive) {
-      _activeAlarms.add(alarm);
-    }
-  });
-  _updateAlarmInStorage(alarm);
-  _updatePages();
-}
+    });
+    _updateAlarmInStorage(alarm);
+    _updatePages();
+  }
 
   Future<void> _updateAlarmInStorage(Alarm alarm) async {
     final prefs = await SharedPreferences.getInstance();
@@ -123,7 +122,7 @@ void updateAlarmStatus(Alarm alarm) {
   void initState() {
     super.initState();
     _pages = [
-      TrackPage(    
+      TrackPage(
         alarms: _activeAlarms,
         updateAlarmStatus: updateAlarmStatus,
       ),
@@ -171,45 +170,107 @@ void updateAlarmStatus(Alarm alarm) {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Text('WakeNav', style: TextStyle(color: Colors.white, fontSize: 24)),
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Color(0xFF008080)),
+              child: Text('WakeNav',
+                  style: TextStyle(color: Colors.white, fontSize: 24)),
             ),
-            ListTile(
-              leading: Icon(Icons.map),
-              title: Text('Track'),
-              selected: _selectedIndex == 0,
-              onTap: () {
-                _onItemTapped(0);
-                Navigator.pop(context);
-              },
+            Padding(
+              padding: EdgeInsets.all(10),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: _selectedIndex == 0
+                      ? Color.fromARGB(255, 94, 204, 193)
+                      : Color(0xFF008080),
+                  borderRadius: BorderRadius.circular(15), // Set the curve
+                ),
+                child: ListTile(
+                  leading: Icon(Icons.map, color: Colors.white),
+                  title: Text('Track', style: TextStyle(color: Colors.white)),
+                  selected: _selectedIndex == 0,
+                  onTap: () {
+                    _onItemTapped(0);
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
             ),
-            ListTile(
-              leading: Icon(Icons.add_location),
-              title: Text('Create'),
-              selected: _selectedIndex == 1,
-              onTap: () {
-                _onItemTapped(1);
-                Navigator.pop(context);
-              },
+            Padding(
+              padding: EdgeInsets.all(10),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: _selectedIndex == 1
+                      ? Color.fromARGB(255, 57, 185, 173)
+                      : Color(0xFF008080),
+                  borderRadius: BorderRadius.circular(15), // Set the curve
+                ),
+                child: ListTile(
+                  leading: Icon(Icons.add_location, color: Colors.white),
+                  title: Text('Navigate', style: TextStyle(color: Colors.white)),
+                  selected: _selectedIndex == 1,
+                  onTap: () {
+                    _onItemTapped(1);
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
             ),
-            ListTile(
-              leading: Icon(Icons.alarm),
-              title: Text('Alarms'),
-              selected: _selectedIndex == 2,
-              onTap: () {
-                _onItemTapped(2);
-                Navigator.pop(context);
-              },
+            Padding(
+              padding: EdgeInsets.all(10),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: _selectedIndex == 2
+                      ? Color.fromARGB(255, 57, 185, 173)
+                      : Color(0xFF008080),
+                  borderRadius: BorderRadius.circular(15), // Set the curve
+                ),
+                child: ListTile(
+                  leading: Icon(Icons.alarm, color: Colors.white),
+                  title: Text('Alarms', style: TextStyle(color: Colors.white)),
+                  selected: _selectedIndex == 2,
+                  onTap: () {
+                    _onItemTapped(2);
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
             ),
-            ListTile(
-              leading: Icon(Icons.settings),
-              title: Text('Settings'),
-              selected: _selectedIndex == 3,
-              onTap: () {
-                _onItemTapped(3);
-                Navigator.pop(context);
-              },
+            Padding(
+              padding: EdgeInsets.all(10),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: _selectedIndex == 3
+                      ? Color.fromARGB(255, 57, 185, 173)
+                      : Color(0xFF008080),
+                  borderRadius: BorderRadius.circular(15), // Set the curve
+                ),
+                child: ListTile(
+                  leading: Icon(Icons.settings, color: Colors.white),
+                  title:
+                      Text('Settings', style: TextStyle(color: Colors.white)),
+                  selected: _selectedIndex == 3,
+                  onTap: () {
+                    _onItemTapped(3);
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+            ),
+            Divider(),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 209, 209, 209),
+                  borderRadius: BorderRadius.circular(15),
+                ), // Set the curve
+                child: ListTile(
+                  leading: Icon(Icons.exit_to_app),
+                  title: Text('Exit'),
+                  onTap: () {
+                    SystemNavigator.pop();},
+                ),
+              ),
             ),
           ],
         ),
@@ -218,13 +279,13 @@ void updateAlarmStatus(Alarm alarm) {
         children: [
           _pages[_selectedIndex],
           Positioned(
-            top: 40,
+            top: 8,
             left: 10,
             child: Builder(
               builder: (context) => IconButton(
                 icon: Icon(Icons.menu),
                 onPressed: () => Scaffold.of(context).openDrawer(),
-                color: Colors.black54,
+                color: Colors.white,
               ),
             ),
           ),
