@@ -1,6 +1,6 @@
 // main.dart
-import 'dart:convert';
 
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakenav/alarms_page.dart';
@@ -8,7 +8,6 @@ import 'package:wakenav/splash_screen.dart';
 import 'package:wakenav/track_page.dart';
 import 'package:wakenav/navigate_page.dart';
 import 'package:wakenav/models/alarm.dart';
-
 
 void main() {
   runApp(WakeNavApp());
@@ -36,33 +35,53 @@ class MainScreen extends StatefulWidget {
   _MainScreenState createState() => _MainScreenState();
 }
 
-
-
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-  Alarm? _currentAlarm;
+  List<Alarm> _activeAlarms = [];
 
-  void _updateRouteInfo(Alarm? alarm) {
+  void _updateRouteInfo(Alarm alarm) {
     setState(() {
-      _currentAlarm = alarm;
-    });
-  }
-    void updateStateWithAlarm(Alarm alarm) {
-    setState(() {
-      _currentAlarm = alarm;
-      _selectedIndex = 0;  // Switch to the TrackPage
-    });
-    _updatePages();  // Add this method to update the pages with the new alarm
-  }
-
-  void updateAlarmStatus(Alarm alarm) {
-    setState(() {
-      if (_currentAlarm?.id == alarm.id) {
-        _currentAlarm = alarm;
+      if (!_activeAlarms.contains(alarm)) {
+        _activeAlarms.add(alarm);
       }
     });
-    _updateAlarmInStorage(alarm);
   }
+
+  
+
+  void updateStateWithAlarm(Alarm alarm) {
+    setState(() {
+      if (!_activeAlarms.contains(alarm)) {
+        _activeAlarms.add(alarm);
+      }
+      _selectedIndex = 0;  // Switch to the TrackPage
+    });
+    _updatePages();
+  }
+
+  void removeActiveAlarm(Alarm alarm) {
+    setState(() {
+      _activeAlarms.removeWhere((a) => a.id == alarm.id);
+    });
+    _updatePages();
+  }
+
+void updateAlarmStatus(Alarm alarm) {
+  setState(() {
+    int index = _activeAlarms.indexWhere((a) => a.id == alarm.id);
+    if (index != -1) {
+      if (alarm.isActive) {
+        _activeAlarms[index] = alarm;
+      } else {
+        _activeAlarms.removeAt(index);
+      }
+    } else if (alarm.isActive) {
+      _activeAlarms.add(alarm);
+    }
+  });
+  _updateAlarmInStorage(alarm);
+  _updatePages();
+}
 
   Future<void> _updateAlarmInStorage(Alarm alarm) async {
     final prefs = await SharedPreferences.getInstance();
@@ -80,24 +99,23 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _startAlarm(Alarm alarm) {
-  setState(() {
-    _currentAlarm = alarm;
-    _selectedIndex = 0; // Switch to the TrackPage
-  });
-  _updatePages();
+    setState(() {
+      if (!_activeAlarms.contains(alarm)) {
+        _activeAlarms.add(alarm);
+      }
+      _selectedIndex = 0; // Switch to the TrackPage
+    });
+    _updatePages();
   }
 
-void _stopAlarm(Alarm alarm) {
-  setState(() {
-    if (_currentAlarm?.id == alarm.id) {
-      _currentAlarm = null;
-    }
-    alarm.deactivate();
-  });
-  updateAlarmStatus(alarm);
-  _updatePages();  // Add this line
-
-}
+  void _stopAlarm(Alarm alarm) {
+    setState(() {
+      _activeAlarms.removeWhere((a) => a.id == alarm.id);
+      alarm.deactivate();
+    });
+    updateAlarmStatus(alarm);
+    _updatePages();
+  }
 
   late final List<Widget> _pages;
 
@@ -106,11 +124,12 @@ void _stopAlarm(Alarm alarm) {
     super.initState();
     _pages = [
       TrackPage(    
-      alarm: _currentAlarm,
-      updateAlarmStatus: updateAlarmStatus,),
+        alarms: _activeAlarms,
+        updateAlarmStatus: updateAlarmStatus,
+      ),
       NavigatePage(
         onRouteSet: _updateRouteInfo,
-        initialAlarm: _currentAlarm,
+        activeAlarms: _activeAlarms,
         updateAlarmStatus: updateAlarmStatus,
       ),
       AlarmsPage(
@@ -124,11 +143,12 @@ void _stopAlarm(Alarm alarm) {
   void _updatePages() {
     setState(() {
       _pages[0] = TrackPage(
-        alarm: _currentAlarm,
-        updateAlarmStatus: updateAlarmStatus,);
+        alarms: _activeAlarms,
+        updateAlarmStatus: updateAlarmStatus,
+      );
       _pages[1] = NavigatePage(
         onRouteSet: _updateRouteInfo,
-        initialAlarm: _currentAlarm,
+        activeAlarms: _activeAlarms,
         updateAlarmStatus: updateAlarmStatus,
       );
       _pages[2] = AlarmsPage(

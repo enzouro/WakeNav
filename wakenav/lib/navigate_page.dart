@@ -1,4 +1,4 @@
-//navigate_page.dart
+// navigate_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -10,16 +10,15 @@ import 'dart:convert';
 import 'dart:async';
 import 'widget/alarm_drawer.dart';
 
-
 class NavigatePage extends StatefulWidget {
-  final Function(Alarm?) onRouteSet;
-  final Alarm? initialAlarm;
+  final Function(Alarm) onRouteSet;
+  final List<Alarm> activeAlarms;
   final Function(Alarm) updateAlarmStatus;
 
   const NavigatePage({
     Key? key, 
     required this.onRouteSet, 
-    this.initialAlarm,
+    required this.activeAlarms,
     required this.updateAlarmStatus,
   }) : super(key: key);
 
@@ -37,16 +36,13 @@ class _NavigatePageState extends State<NavigatePage> {
   bool _showAlarmDrawer = false;
   bool _isDestinationSet = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+    _searchController.addListener(_onSearchChanged);
+  }
 
-@override
-void initState() {
-  super.initState();
-  _destinationPosition = widget.initialAlarm != null 
-      ? LatLng(widget.initialAlarm!.latitude, widget.initialAlarm!.longitude)
-      : null;
-  _getCurrentLocation();
-  _searchController.addListener(_onSearchChanged);
-}
   @override
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
@@ -103,15 +99,15 @@ void initState() {
     }
   }
 
-void _handleLongPress(TapPosition _, LatLng tappedPoint) {
-  setState(() {
-    _destinationPosition = tappedPoint;
-    _isDestinationSet = true;
-    _showAlarmDrawer = true;
-  });
-  _setDestination(tappedPoint);
-  _panToDestination();
-}
+  void _handleLongPress(TapPosition _, LatLng tappedPoint) {
+    setState(() {
+      _destinationPosition = tappedPoint;
+      _isDestinationSet = true;
+      _showAlarmDrawer = true;
+    });
+    _setDestination(tappedPoint);
+    _panToDestination();
+  }
 
   Future<List<Map<String, dynamic>>> searchLocation(String query) async {
     final String url = 'https://nominatim.openstreetmap.org/search?format=json&q=$query';
@@ -146,52 +142,39 @@ void _handleLongPress(TapPosition _, LatLng tappedPoint) {
     }
   }
 
-void _selectLocation(Map<String, dynamic> location) {
-  LatLng destination = LatLng(location['lat'], location['lon']);
-  setState(() {
-    _destinationPosition = destination;
-    _isDestinationSet = true;
-    _showAlarmDrawer = true;
-  });
-  _setDestination(destination);
-  _panToDestination();
-  _searchController.clear();
-  setState(() {
-    _searchResults = [];
-  });
-}
-// Inside NavigatePage
-void _setDestination([LatLng? destination]) {
-  if (destination == null && _searchResults.isNotEmpty) {
-    _selectLocation(_searchResults.first);
-  } else if (destination != null) {
-    Alarm newAlarm = Alarm(
-      id: DateTime.now().toString(), // You might want to use a proper UUID here
-      name: "New Alarm",
-      distance: 100, // Default distance, you might want to make this configurable
-      latitude: destination.latitude,
-      longitude: destination.longitude,
-    );
-    widget.onRouteSet(newAlarm);
-  }
-}
-void _closeAlarmDrawer() {
-  setState(() {
-    _showAlarmDrawer = false;
-    _isDestinationSet = false;
-    _destinationPosition = null;
-  });
-  widget.onRouteSet(null);
-}
-
-  void _saveAlarm() {
-    // Implement saving alarm logic
-    print('Saving alarm');
+  void _selectLocation(Map<String, dynamic> location) {
+    LatLng destination = LatLng(location['lat'], location['lon']);
+    setState(() {
+      _destinationPosition = destination;
+      _isDestinationSet = true;
+      _showAlarmDrawer = true;
+    });
+    _setDestination(destination);
+    _panToDestination();
+    _searchController.clear();
+    setState(() {
+      _searchResults = [];
+    });
   }
 
-  void _startAlarm() {
-    // Implement starting alarm logic
-    print('Starting alarm');
+  void _setDestination([LatLng? destination]) {
+    if (destination == null && _searchResults.isNotEmpty) {
+      _selectLocation(_searchResults.first);
+    } else if (destination != null) {
+      setState(() {
+        _destinationPosition = destination;
+        _isDestinationSet = true;
+        _showAlarmDrawer = true;
+      });
+    }
+  }
+
+  void _closeAlarmDrawer() {
+    setState(() {
+      _showAlarmDrawer = false;
+      _isDestinationSet = false;
+      _destinationPosition = null;
+    });
   }
 
   void _showErrorMessage(String message) {
@@ -257,6 +240,16 @@ void _closeAlarmDrawer() {
                               size: 40.0,
                             ),
                           ),
+                        ...widget.activeAlarms.map((alarm) => Marker(
+                          width: 80.0,
+                          height: 80.0,
+                          point: LatLng(alarm.latitude, alarm.longitude),
+                          child: Icon(
+                            Icons.alarm,
+                            color: Colors.green,
+                            size: 30.0,
+                          ),
+                        )).toList(),
                       ],
                     ),
                   ],
@@ -283,7 +276,7 @@ void _closeAlarmDrawer() {
                         ),
                         IconButton(
                           icon: Icon(Icons.search),
-                          onPressed: _setDestination,
+                          onPressed: () => _setDestination(),
                         ),
                       ],
                     ),
@@ -302,19 +295,21 @@ void _closeAlarmDrawer() {
               ),
             ),
           if (_showAlarmDrawer)
-          AlarmDrawer(
-            onCancel: _closeAlarmDrawer,
-            onSave: (Alarm alarm) {
-              print('Alarm saved: ${alarm.name}');
-              widget.onRouteSet(alarm);
-            },
-            onStart: (Alarm alarm) {
-              print('Alarm started: ${alarm.name}');
-              widget.onRouteSet(alarm);
-            },
-            latitude: _destinationPosition!.latitude,
-            longitude: _destinationPosition!.longitude,
-          ),
+            AlarmDrawer(
+              onCancel: _closeAlarmDrawer,
+              onSave: (Alarm alarm) {
+                print('Alarm saved: ${alarm.name}');
+                widget.onRouteSet(alarm);
+                _closeAlarmDrawer();
+              },
+              onStart: (Alarm alarm) {
+                print('Alarm started: ${alarm.name}');
+                widget.onRouteSet(alarm);
+                _closeAlarmDrawer();
+              },
+              latitude: _destinationPosition!.latitude,
+              longitude: _destinationPosition!.longitude,
+            ),
         ],
       ),
     );
