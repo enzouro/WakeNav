@@ -6,11 +6,14 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
 import 'dart:async';
 import '../models/alarm.dart';
+
 class TrackPage extends StatefulWidget {
   final List<Alarm> alarms;
   final Function(Alarm) updateAlarmStatus;
 
-  const TrackPage({Key? key, required this.alarms, required this.updateAlarmStatus}) : super(key: key);
+  const TrackPage(
+      {Key? key, required this.alarms, required this.updateAlarmStatus})
+      : super(key: key);
 
   @override
   _TrackPageState createState() => _TrackPageState();
@@ -62,7 +65,7 @@ class _TrackPageState extends State<TrackPage> {
 
       if (distance <= alarm.distance) {
         _showAlarmDialog(alarm);
-        break;  // You might want to handle multiple triggered alarms differently
+        break; // You might want to handle multiple triggered alarms differently
       }
     }
   }
@@ -90,7 +93,7 @@ class _TrackPageState extends State<TrackPage> {
     );
   }
 
-    @override
+  @override
   void didUpdateWidget(TrackPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.alarms != oldWidget.alarms) {
@@ -108,11 +111,17 @@ class _TrackPageState extends State<TrackPage> {
 
   @override
   Widget build(BuildContext context) {
-     List<Alarm> activeAlarms = widget.alarms.where((alarm) => alarm.isActive).toList();
+    List<Alarm> activeAlarms =
+        widget.alarms.where((alarm) => alarm.isActive).toList();
     return Scaffold(
       appBar: AppBar(
-        title: Text('Tracking ${activeAlarms.length} Active Alarm${activeAlarms.length != 1 ? 's' : ''}'),
-        backgroundColor: Colors.transparent,
+        backgroundColor: Color(0xFF008080),
+        title: Row(
+          children: [
+            SizedBox(width: 33), // This adds a space of 10 pixels
+            Text('Tracking ${activeAlarms.length} Active Alarm${activeAlarms.length != 1 ? 's' : ''}', style: TextStyle(color: Colors.white))
+          ],
+        ),
       ),
       extendBodyBehindAppBar: true,
       body: _currentPosition == null
@@ -127,7 +136,8 @@ class _TrackPageState extends State<TrackPage> {
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                       userAgentPackageName: 'com.example.app',
                       tileProvider: CancellableNetworkTileProvider(),
                     ),
@@ -143,24 +153,34 @@ class _TrackPageState extends State<TrackPage> {
                             size: 30.0,
                           ),
                         ),
-                        ...widget.alarms.where((alarm) => alarm.isActive).map((alarm) => Marker(
-                          width: 80.0,
-                          height: 80.0,
-                          point: LatLng(alarm.latitude, alarm.longitude),
-                          child: Icon(
-                            Icons.location_pin,
-                            color: Color.fromARGB(255, 243, 33, 33),
-                            size: 30.0,
-                          ),
-                        )).toList(),
+                        ...widget.alarms
+                            .where((alarm) => alarm.isActive)
+                            .map((alarm) => Marker(
+                                  width: 80.0,
+                                  height: 80.0,
+                                  point:
+                                      LatLng(alarm.latitude, alarm.longitude),
+                                  child: Icon(
+                                    Icons.location_pin,
+                                    color: Color.fromARGB(255, 243, 33, 33),
+                                    size: 30.0,
+                                  ),
+                                ))
+                            .toList(),
                       ],
                     ),
                     PolylineLayer(
-                      polylines: widget.alarms.where((alarm) => alarm.isActive).map((alarm) => Polyline(
-                        points: [_currentPosition!, LatLng(alarm.latitude, alarm.longitude)],
-                        strokeWidth: 4.0,
-                        color: Colors.blue,
-                      )).toList(),
+                      polylines: widget.alarms
+                          .where((alarm) => alarm.isActive)
+                          .map((alarm) => Polyline(
+                                points: [
+                                  _currentPosition!,
+                                  LatLng(alarm.latitude, alarm.longitude)
+                                ],
+                                strokeWidth: 4.0,
+                                color: Colors.blue,
+                              ))
+                          .toList(),
                     ),
                   ],
                 ),
@@ -169,7 +189,9 @@ class _TrackPageState extends State<TrackPage> {
                   left: 10,
                   right: 10,
                   child: Column(
-                    children: widget.alarms.where((alarm) => alarm.isActive).map((alarm) {
+                    children: widget.alarms
+                        .where((alarm) => alarm.isActive)
+                        .map((alarm) {
                       double distance = Geolocator.distanceBetween(
                         _currentPosition!.latitude,
                         _currentPosition!.longitude,
@@ -189,7 +211,8 @@ class _TrackPageState extends State<TrackPage> {
                             Expanded(
                               child: Text(
                                 '${alarm.name}: ${distance.toStringAsFixed(2)} meters',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
                               ),
                             ),
                             IconButton(

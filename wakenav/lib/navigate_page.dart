@@ -16,8 +16,8 @@ class NavigatePage extends StatefulWidget {
   final Function(Alarm) updateAlarmStatus;
 
   const NavigatePage({
-    Key? key, 
-    required this.onRouteSet, 
+    Key? key,
+    required this.onRouteSet,
     required this.activeAlarms,
     required this.updateAlarmStatus,
   }) : super(key: key);
@@ -82,11 +82,12 @@ class _NavigatePageState extends State<NavigatePage> {
         return;
       }
     }
-    
+
     if (permission == LocationPermission.deniedForever) {
-      _showErrorMessage('Location permissions are permanently denied, we cannot request permissions.');
+      _showErrorMessage(
+          'Location permissions are permanently denied, we cannot request permissions.');
       return;
-    } 
+    }
 
     try {
       Position position = await Geolocator.getCurrentPosition(
@@ -110,17 +111,20 @@ class _NavigatePageState extends State<NavigatePage> {
   }
 
   Future<List<Map<String, dynamic>>> searchLocation(String query) async {
-    final String url = 'https://nominatim.openstreetmap.org/search?format=json&q=$query';
-    
+    final String url =
+        'https://nominatim.openstreetmap.org/search?format=json&q=$query';
+
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
-        return data.map((item) => {
-          'name': item['display_name'],
-          'lat': double.parse(item['lat']),
-          'lon': double.parse(item['lon'])
-        }).toList();
+        return data
+            .map((item) => {
+                  'name': item['display_name'],
+                  'lat': double.parse(item['lat']),
+                  'lon': double.parse(item['lon'])
+                })
+            .toList();
       } else {
         print('Error: HTTP ${response.statusCode}');
       }
@@ -186,7 +190,8 @@ class _NavigatePageState extends State<NavigatePage> {
   void _panToDestination() {
     if (_destinationPosition != null) {
       final offset = -0.006;
-      final newCenter = LatLng(_destinationPosition!.latitude + offset, _destinationPosition!.longitude);
+      final newCenter = LatLng(_destinationPosition!.latitude + offset,
+          _destinationPosition!.longitude);
       _mapController.move(newCenter, 15.0);
     }
   }
@@ -195,8 +200,13 @@ class _NavigatePageState extends State<NavigatePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Navigate'),
-        backgroundColor: Colors.transparent,
+        title: Row(
+          children: [
+            SizedBox(width: 33), // This adds a space of 10 pixels
+            Text('Navigate', style: TextStyle(color: Colors.white)),
+          ],
+        ),
+        backgroundColor: Color(0xFF008080),
       ),
       extendBodyBehindAppBar: true,
       body: Stack(
@@ -212,7 +222,8 @@ class _NavigatePageState extends State<NavigatePage> {
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                       userAgentPackageName: 'com.example.app',
                       tileProvider: CancellableNetworkTileProvider(),
                     ),
@@ -240,16 +251,19 @@ class _NavigatePageState extends State<NavigatePage> {
                               size: 40.0,
                             ),
                           ),
-                        ...widget.activeAlarms.map((alarm) => Marker(
-                          width: 80.0,
-                          height: 80.0,
-                          point: LatLng(alarm.latitude, alarm.longitude),
-                          child: Icon(
-                            Icons.alarm,
-                            color: Colors.green,
-                            size: 30.0,
-                          ),
-                        )).toList(),
+                        ...widget.activeAlarms
+                            .map((alarm) => Marker(
+                                  width: 80.0,
+                                  height: 80.0,
+                                  point:
+                                      LatLng(alarm.latitude, alarm.longitude),
+                                  child: Icon(
+                                    Icons.alarm,
+                                    color: Colors.green,
+                                    size: 30.0,
+                                  ),
+                                ))
+                            .toList(),
                       ],
                     ),
                   ],
@@ -270,7 +284,8 @@ class _NavigatePageState extends State<NavigatePage> {
                             controller: _searchController,
                             decoration: InputDecoration(
                               hintText: 'Search for a location',
-                              contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                              contentPadding:
+                                  EdgeInsets.symmetric(horizontal: 10),
                             ),
                           ),
                         ),
@@ -285,10 +300,12 @@ class _NavigatePageState extends State<NavigatePage> {
                     Container(
                       color: Colors.white,
                       child: Column(
-                        children: _searchResults.map((location) => ListTile(
-                          title: Text(location['name']),
-                          onTap: () => _selectLocation(location),
-                        )).toList(),
+                        children: _searchResults
+                            .map((location) => ListTile(
+                                  title: Text(location['name']),
+                                  onTap: () => _selectLocation(location),
+                                ))
+                            .toList(),
                       ),
                     ),
                 ],

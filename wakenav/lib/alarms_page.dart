@@ -44,6 +44,7 @@ class _AlarmsPageState extends State<AlarmsPage> {
       _alarms.removeWhere((a) => a.id == alarm.id);
     });
     _saveAlarms();
+    widget.onStopAlarm(alarm);
   }
 
   void _toggleAlarmActive(Alarm alarm) {
@@ -81,8 +82,13 @@ class _AlarmsPageState extends State<AlarmsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Saved Alarms'),
-        backgroundColor: Colors.blue,
+        title: Row(
+          children: [
+            SizedBox(width: 33), // This adds a space of 10 pixels
+            Text('Saved Alarms', style: TextStyle(color: Colors.white)),
+          ],
+        ),
+        backgroundColor: Color(0xFF008080),
       ),
       body: _alarms.isEmpty
           ? Center(child: Text('No alarms saved yet.'))
@@ -175,7 +181,7 @@ class _AlarmEditDialogState extends State<AlarmEditDialog> {
             Slider(
               value: _distance,
               min: 50,
-              max: 1000,
+              max: 5000,
               divisions: 19,
               onChanged: (value) {
                 setState(() {
