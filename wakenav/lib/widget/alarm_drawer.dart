@@ -212,7 +212,7 @@ class _AlarmDrawerState extends State<AlarmDrawer> {
                     Slider(
                       value: _distance,
                       min: 50,
-                      max: 1000,
+                      max: 5000,
                       divisions: 19,
                       onChanged: (value) {
                         setState(() {

@@ -123,14 +123,7 @@ class _AlarmsPageState extends State<AlarmsPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: alarm.isActive ? Colors.red : Colors.green,
                       ),
-                        onPressed: () {
-                        if (alarm.isActive) {
-                          widget.onStopAlarm(alarm);
-                        } else {
-                          widget.onStartAlarm(alarm);
-                        }
-                        _toggleAlarmActive(alarm);
-                      },
+                      onPressed: () => _toggleAlarmActive(alarm),
                     ),
                     onTap: () => _editAlarm(alarm),
                   )

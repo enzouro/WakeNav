@@ -25,17 +25,20 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF008181),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Image.asset(
-              'assets/logos/logo1.png',
+              'assets/logos/nobg1.png',
               width: 500,
               height: 500,
             ),
             SizedBox(height: 20),
-            CircularProgressIndicator(),
+            LinearProgressIndicator(
+              color: Color.fromARGB(255, 4, 245, 245),
+            ),
           ],
         ),
       ),
