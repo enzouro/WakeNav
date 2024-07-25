@@ -36,7 +36,8 @@ class _AlarmsPageState extends State<AlarmsPage> {
 
   Future<void> _saveAlarms() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('alarms', jsonEncode(_alarms.map((e) => e.toJson()).toList()));
+    await prefs.setString(
+        'alarms', jsonEncode(_alarms.map((e) => e.toJson()).toList()));
   }
 
   void _deleteAlarm(Alarm alarm) {
@@ -45,6 +46,40 @@ class _AlarmsPageState extends State<AlarmsPage> {
     });
     _saveAlarms();
     widget.onStopAlarm(alarm);
+  }
+
+  void _confirmDeleteAlarm(BuildContext context, Alarm alarm) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Alarm'),
+          content: Text(
+              'Are you sure you want to delete the alarm "${alarm.name}"?'),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              child: Text('Delete'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteAlarm(alarm);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('${alarm.name} deleted')),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _toggleAlarmActive(Alarm alarm) {
@@ -90,8 +125,9 @@ class _AlarmsPageState extends State<AlarmsPage> {
         ),
         backgroundColor: Color(0xFF008080),
       ),
+      backgroundColor: Color.fromARGB(255, 0, 172, 172),
       body: _alarms.isEmpty
-          ? Center(child: Text('No alarms saved yet.'))
+          ? Center(child: Text('No alarms saved yet.', style: TextStyle(color: Colors.white)))
           : ListView.builder(
               itemCount: _alarms.length,
               itemBuilder: (context, index) {
@@ -112,28 +148,55 @@ class _AlarmsPageState extends State<AlarmsPage> {
                     );
                   },
                   child: Card(
-                    elevation: 2,
-                    margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    child: ListTile(
-                    leading: Icon(
-                      Icons.alarm,
-                      color: alarm.isActive ? Colors.blue : Colors.grey,
-                    ),
-                    title: Text(
-                      alarm.name,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text('Distance: ${alarm.distance.toStringAsFixed(0)} m'),
-                    trailing: ElevatedButton(
-                      child: Text(alarm.isActive ? 'Stop' : 'Start'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: alarm.isActive ? Colors.red : Colors.green,
-                      ),
-                      onPressed: () => _toggleAlarmActive(alarm),
-                    ),
-                    onTap: () => _editAlarm(alarm),
-                  )
-                  ),
+                      color: Colors.white,
+                      elevation: 5,
+                      margin: EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                      child: ListTile(
+                        leading: Icon(
+                          Icons.alarm,
+                          color: alarm.isActive ? Color.fromARGB(255, 179, 37, 27) : Color(0xFF008080),
+                        ),
+                        title: Text(
+                          alarm.name,
+                          style: TextStyle(
+                              color: Color.fromARGB(255, 61, 61, 61), fontWeight: FontWeight.w800),
+                        ),
+                        subtitle: Text(
+                            'Distance: ${alarm.distance.toStringAsFixed(0)} m',
+                            style: TextStyle(color: Color(0xFF008080))),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon:
+                                  Icon(Icons.delete, color: Color(0xFF008080)),
+                              onPressed: () =>
+                                  _confirmDeleteAlarm(context, alarm),
+                              
+                            ),
+                            ElevatedButton(
+                              child: Text(
+                                alarm.isActive ? 'Stop' : 'Start',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: alarm.isActive
+                                    ? Color.fromARGB(255, 179, 37, 27)
+                                    : Color(0xFF008080),
+                                shadowColor: Colors.white,
+                                    
+                                elevation:
+                                    5, // Adjust elevation to match blur radius
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: () => _toggleAlarmActive(alarm),
+                            ),
+                          ],
+                        ),
+                        onTap: () => _editAlarm(alarm),
+                      )),
                 );
               },
             ),
