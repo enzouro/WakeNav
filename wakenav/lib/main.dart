@@ -182,7 +182,7 @@ class _MainScreenState extends State<MainScreen> {
               child: Container(
                 decoration: BoxDecoration(
                   color: _selectedIndex == 0
-                      ? Color.fromARGB(255, 94, 204, 193)
+                      ? Color.fromARGB(255, 0, 172, 172)
                       : Color(0xFF008080),
                   borderRadius: BorderRadius.circular(15), // Set the curve
                 ),
@@ -202,7 +202,7 @@ class _MainScreenState extends State<MainScreen> {
               child: Container(
                 decoration: BoxDecoration(
                   color: _selectedIndex == 1
-                      ? Color.fromARGB(255, 57, 185, 173)
+                      ? Color.fromARGB(255, 0, 172, 172)
                       : Color(0xFF008080),
                   borderRadius: BorderRadius.circular(15), // Set the curve
                 ),
@@ -222,7 +222,7 @@ class _MainScreenState extends State<MainScreen> {
               child: Container(
                 decoration: BoxDecoration(
                   color: _selectedIndex == 2
-                      ? Color.fromARGB(255, 57, 185, 173)
+                      ? Color.fromARGB(255, 0, 172, 172)
                       : Color(0xFF008080),
                   borderRadius: BorderRadius.circular(15), // Set the curve
                 ),
@@ -242,7 +242,7 @@ class _MainScreenState extends State<MainScreen> {
               child: Container(
                 decoration: BoxDecoration(
                   color: _selectedIndex == 3
-                      ? Color.fromARGB(255, 57, 185, 173)
+                      ? Color.fromARGB(255, 0, 172, 172)
                       : Color(0xFF008080),
                   borderRadius: BorderRadius.circular(15), // Set the curve
                 ),
