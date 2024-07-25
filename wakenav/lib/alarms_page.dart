@@ -150,7 +150,7 @@ class _AlarmsPageState extends State<AlarmsPage> {
                   child: Card(
                       color: Colors.white,
                       elevation: 5,
-                      margin: EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                      margin: EdgeInsets.only(left: 25, right: 25, top:30),
                       child: ListTile(
                         leading: Icon(
                           Icons.alarm,
