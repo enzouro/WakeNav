@@ -8,6 +8,7 @@ import 'package:wakenav/alarms_page.dart';
 import 'package:wakenav/splash_screen.dart';
 import 'package:wakenav/track_page.dart';
 import 'package:wakenav/navigate_page.dart';
+import 'settings_page.dart';
 import 'package:wakenav/models/alarm.dart';
 
 void main() {
@@ -135,7 +136,7 @@ class _MainScreenState extends State<MainScreen> {
         onStartAlarm: _startAlarm,
         onStopAlarm: _stopAlarm,
       ),
-      Placeholder(), // SettingsPage placeholder
+      SettingsPage(), // Replacing Placeholder with SettingsPage
     ];
   }
 
@@ -154,6 +155,7 @@ class _MainScreenState extends State<MainScreen> {
         onStartAlarm: _startAlarm,
         onStopAlarm: _stopAlarm,
       );
+      _pages[3] = SettingsPage();
     });
   }
 
