@@ -196,6 +196,12 @@ class _NavigatePageState extends State<NavigatePage> {
     }
   }
 
+  void _centerOnUserLocation() {
+    if (_currentPosition != null) {
+      _mapController.move(_currentPosition!, 14.0);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -236,7 +242,7 @@ class _NavigatePageState extends State<NavigatePage> {
                             point: _currentPosition!,
                             child: Icon(
                               Icons.my_location,
-                              color: Colors.blue,
+                              color: Color.fromARGB(255, 0, 172, 172),
                               size: 30.0,
                             ),
                           ),
@@ -276,7 +282,7 @@ class _NavigatePageState extends State<NavigatePage> {
               child: Column(
                 children: [
                   Container(
-                    color: Colors.white,
+                    color: Colors.transparent,
                     child: Row(
                       children: [
                         Expanded(
@@ -286,12 +292,21 @@ class _NavigatePageState extends State<NavigatePage> {
                               hintText: 'Search for a location',
                               contentPadding:
                                   EdgeInsets.symmetric(horizontal: 10),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                    15.0), // Set the border radius here
+                                borderSide:
+                                    BorderSide.none, // Remove the border
+                              ),
+                              filled: true,
+                              fillColor: const Color.fromARGB(255, 250, 250, 250),
+                              suffixIcon: IconButton(
+                                icon: Icon(Icons.search),
+                                onPressed: () =>
+                                    _setDestination(), // Your function here
+                              ), // Background color of the text field
                             ),
                           ),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.search),
-                          onPressed: () => _setDestination(),
                         ),
                       ],
                     ),
@@ -329,6 +344,11 @@ class _NavigatePageState extends State<NavigatePage> {
             ),
         ],
       ),
+      //   floatingActionButton: FloatingActionButton(
+      //   onPressed: _centerOnUserLocation,
+      //   child: Icon(Icons.my_location, color: Colors.white,),
+      //   backgroundColor: Color(0xFF008080),
+      // ),
     );
   }
 }

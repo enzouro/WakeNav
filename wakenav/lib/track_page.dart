@@ -149,7 +149,7 @@ class _TrackPageState extends State<TrackPage> {
                           point: _currentPosition!,
                           child: Icon(
                             Icons.my_location,
-                            color: Colors.blue,
+                            color: Color.fromARGB(255, 0, 172, 172),
                             size: 30.0,
                           ),
                         ),
@@ -178,7 +178,7 @@ class _TrackPageState extends State<TrackPage> {
                                   LatLng(alarm.latitude, alarm.longitude)
                                 ],
                                 strokeWidth: 4.0,
-                                color: Colors.blue,
+                                color: Color.fromARGB(255, 0, 172, 172),
                               ))
                           .toList(),
                     ),
@@ -232,8 +232,8 @@ class _TrackPageState extends State<TrackPage> {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: _centerOnUserLocation,
-        child: Icon(Icons.my_location),
-        backgroundColor: Colors.blue,
+        child: Icon(Icons.my_location, color: Colors.white,),
+        backgroundColor: Color(0xFF008080),
       ),
     );
   }
