@@ -12,8 +12,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 class TrackPage extends StatefulWidget {
   final List<Alarm> alarms;
   final Function(Alarm) updateAlarmStatus;
+  final Function(int) updateSelectedIndex;  
 
-  const TrackPage({Key? key, required this.alarms, required this.updateAlarmStatus}) : super(key: key);
+  const TrackPage({
+    Key? key, 
+    required this.alarms,
+    required this.updateAlarmStatus,
+    required this.updateSelectedIndex,}) : super(key: key);
 
   @override
   _TrackPageState createState() => _TrackPageState();
@@ -25,6 +30,7 @@ class _TrackPageState extends State<TrackPage> {
   StreamSubscription<Position>? _positionStreamSubscription;
   final AudioPlayer _audioPlayer = AudioPlayer();
   Set<String> _triggeredAlarms = Set<String>();
+
 
   @override
   void initState() {
@@ -174,7 +180,9 @@ void _showAlarmDialog(Alarm alarm) async {
       ),
       extendBodyBehindAppBar: true,
       body: _currentPosition == null
-          ? Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(
+            color: Color.fromARGB(255, 0, 255, 255),
+          ))
           : Stack(
               children: [
                 FlutterMap(
@@ -279,10 +287,23 @@ void _showAlarmDialog(Alarm alarm) async {
                 ),
               ],
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _centerOnUserLocation,
-        child: Icon(Icons.my_location, color: Colors.white,),
-        backgroundColor: Color(0xFF008080),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () => widget.updateSelectedIndex(1),
+            child: Icon(Icons.add_alarm, color: Colors.white),
+            backgroundColor: Color(0xFF008080),
+            heroTag: 'addAlarm',
+          ),
+          SizedBox(height: 16),  // Add some space between the buttons
+          FloatingActionButton(
+            onPressed: _centerOnUserLocation,
+            child: Icon(Icons.my_location, color: Colors.white),
+            backgroundColor: Color(0xFF008080),
+            heroTag: 'myLocation',
+          ),
+        ],
       ),
     );
   }

@@ -39,6 +39,8 @@ dependencies:
   uuid: ^4.4.2
   alarm: ^3.1.5
   just_audio: ^0.9.39
+  file_picker: ^8.0.6
+  path_provider: ^2.1.3
 
 
 
@@ -72,11 +74,16 @@ flutter:
   assets:
     - assets/logos/logo1.png
     - assets/logos/nobg1.png
-    - assets/sounds/BINI.mp3
-    - assets/sounds/BINI - Copy.mp3
-    - assets/sounds/BINI - Copy (2).mp3
-    - assets/sounds/BINI - Copy (3).mp3
-    - assets/sounds/BINI  'Cherry On Top'.mp3
+    - assets/sounds/BINI 'Salamin Salamin'.mp3
+    - assets/sounds/BINI 'Pantropiko'.mp3
+    - assets/sounds/BINI 'Cherry On Top'.mp3
+    - assets/sounds/BINI 'Karera'.mp3
+    - assets/sounds/Critical.wav
+    - assets/sounds/Digital-buzzer.wav
+    - assets/sounds/Jackpot.wav
+    - assets/sounds/Morning-clock.wav
+    - assets/sounds/Retro.wav
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

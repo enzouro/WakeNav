@@ -10,11 +10,10 @@ import 'package:wakenav/track_page.dart'; ///////
 import 'package:wakenav/navigate_page.dart';
 import 'settings_page.dart';
 import 'package:wakenav/models/alarm.dart';
-import 'package:alarm/alarm.dart' as AlarmPlugin;
+
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await AlarmPlugin.Alarm.init();
+
   runApp(WakeNavApp());
 }
 
@@ -50,6 +49,13 @@ class _MainScreenState extends State<MainScreen> {
         _activeAlarms.add(alarm);
       }
     });
+  }
+
+  void updateSelectedIndex(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    _updatePages();
   }
 
   void updateStateWithAlarm(Alarm alarm) {
@@ -129,6 +135,7 @@ class _MainScreenState extends State<MainScreen> {
       TrackPage(
         alarms: _activeAlarms,
         updateAlarmStatus: updateAlarmStatus,
+        updateSelectedIndex: updateSelectedIndex,
       ),
       NavigatePage(
         onRouteSet: _updateRouteInfo,
@@ -148,6 +155,7 @@ class _MainScreenState extends State<MainScreen> {
       _pages[0] = TrackPage(
         alarms: _activeAlarms,
         updateAlarmStatus: updateAlarmStatus,
+        updateSelectedIndex: updateSelectedIndex,
       );
       _pages[1] = NavigatePage(
         onRouteSet: _updateRouteInfo,
