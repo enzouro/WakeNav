@@ -6,6 +6,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
 import 'dart:async';
 import '../models/alarm.dart';
+import 'package:alarm/alarm.dart' as AlarmPlugin;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TrackPage extends StatefulWidget {
   final List<Alarm> alarms;
@@ -28,6 +30,12 @@ class _TrackPageState extends State<TrackPage> {
   void initState() {
     super.initState();
     _startLocationTracking();
+    _initializeAlarm();
+    
+  }
+
+  Future<void> _initializeAlarm() async {
+    await AlarmPlugin.Alarm.init();
   }
 
   @override
@@ -70,20 +78,60 @@ class _TrackPageState extends State<TrackPage> {
     }
   }
 
-  void _showAlarmDialog(Alarm alarm) {
+ void _showAlarmDialog(Alarm alarm) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? soundFile = prefs.getString('selectedSound');
+    final double volume = prefs.getDouble('volume') ?? 0.5;
+    final bool vibrate = prefs.getBool('vibrate') ?? true;
+    final bool loopAudio = prefs.getBool('loopAudio') ?? true;
+
+    if (soundFile != null) {
+      final alarmSettings = AlarmPlugin.AlarmSettings(
+        id: alarm.id.hashCode,
+        dateTime: DateTime.now(),
+        assetAudioPath: soundFile,
+        loopAudio: loopAudio,
+        vibrate: vibrate,
+        volume: volume,
+        notificationTitle: 'Destination Reached',
+        notificationBody: 'You have reached: ${alarm.name}',
+      );
+      await AlarmPlugin.Alarm.set(alarmSettings: alarmSettings);
+    }
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Alarm'),
+          title: Text('Destination Reached'),
           content: Text('You have reached your destination: ${alarm.name}!'),
           actions: <Widget>[
             TextButton(
               child: Text('Stop'),
               onPressed: () {
+                AlarmPlugin.Alarm.stop(alarm.id.hashCode);
                 alarm.deactivate();
                 widget.updateAlarmStatus(alarm);
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Snooze'),
+              onPressed: () async {
+                final int snoozeLength = prefs.getInt('snoozeLength') ?? 5;
+                final snoozeTime = DateTime.now().add(Duration(minutes: snoozeLength));
+                final snoozeSettings = AlarmPlugin.AlarmSettings(
+                  id: alarm.id.hashCode,
+                  dateTime: snoozeTime,
+                  assetAudioPath: soundFile!,
+                  loopAudio: loopAudio,
+                  vibrate: vibrate,
+                  volume: volume,
+                  notificationTitle: 'Snoozed Alarm',
+                  notificationBody: 'Snoozed alarm for ${alarm.name}',
+                );
+                await AlarmPlugin.Alarm.set(alarmSettings: snoozeSettings);
                 Navigator.of(context).pop();
               },
             ),
