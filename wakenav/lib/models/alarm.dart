@@ -8,6 +8,8 @@ class Alarm {
   final double latitude;
   final double longitude;
   bool isActive;
+  bool dialogShown = false;
+  bool hasTriggered = false;
 
   Alarm({
     required this.id,
@@ -17,6 +19,8 @@ class Alarm {
     required this.latitude,
     required this.longitude,
     this.isActive = false,
+    this.dialogShown = false,
+    this.hasTriggered = false,
   });
 
   // Add this method to deactivate the alarm
@@ -43,6 +47,8 @@ class Alarm {
       'latitude': latitude,
       'longitude': longitude,
       'isActive': isActive,
+      'dialogShown': dialogShown,
+      'hasTriggered': hasTriggered,
     };
   }
 
@@ -55,6 +61,8 @@ class Alarm {
       latitude: json['latitude'],
       longitude: json['longitude'],
       isActive: json['isActive'] ?? false,
+      dialogShown: json['dialogShown'] ?? false,
+      hasTriggered: json['hasTriggered'] ?? false,
     );
   }
 
@@ -67,6 +75,7 @@ class Alarm {
     double? latitude,
     double? longitude,
     bool? isActive,
+  
   }) {
     return Alarm(
       id: id ?? this.id,

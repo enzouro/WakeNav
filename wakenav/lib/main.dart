@@ -6,12 +6,15 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakenav/alarms_page.dart';
 import 'package:wakenav/splash_screen.dart';
-import 'package:wakenav/track_page.dart';
+import 'package:wakenav/track_page.dart'; ///////
 import 'package:wakenav/navigate_page.dart';
 import 'settings_page.dart';
 import 'package:wakenav/models/alarm.dart';
+import 'package:alarm/alarm.dart' as AlarmPlugin;
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AlarmPlugin.Alarm.init();
   runApp(WakeNavApp());
 }
 

@@ -1,7 +1,7 @@
 //settings.dart
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:alarm/alarm.dart' as AlarmPlugin;
+import 'package:just_audio/just_audio.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -17,17 +17,19 @@ class _SettingsPageState extends State<SettingsPage> {
   bool vibrate = true;
   int snoozeLength = 5; // in minutes
   bool loopAudio = true;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
     _loadSoundFiles();
     _loadSettings();
-    _initializeAlarm();
   }
 
-  Future<void> _initializeAlarm() async {
-    await AlarmPlugin.Alarm.init();
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSettings() async {
@@ -43,7 +45,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _saveSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('selectedSound', selectedSound!);
+    await prefs.setString('selectedSound', selectedSound ?? '');
     await prefs.setDouble('volume', volume);
     await prefs.setBool('vibrate', vibrate);
     await prefs.setInt('snoozeLength', snoozeLength);
@@ -51,7 +53,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _loadSoundFiles() async {
-    // This assumes you have alarm sounds in your assets folder
     final manifestContent = await DefaultAssetBundle.of(context).loadString('AssetManifest.json');
     final Map<String, dynamic> manifestMap = json.decode(manifestContent);
     final soundPaths = manifestMap.keys
@@ -65,19 +66,12 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
-Future<void> _playSelectedSound() async {
+  Future<void> _playSelectedSound() async {
     if (selectedSound != null) {
-      final alarmSettings = AlarmPlugin.AlarmSettings(
-        id: 42,
-        dateTime: DateTime.now().add(Duration(seconds: 1)),
-        assetAudioPath: selectedSound!,
-        loopAudio: loopAudio,
-        vibrate: vibrate,
-        volume: volume,
-        notificationTitle: 'Test Alarm',
-        notificationBody: 'This is a test',
-      );
-      await AlarmPlugin.Alarm.set(alarmSettings: alarmSettings);
+      await _audioPlayer.setAsset(selectedSound!);
+      _audioPlayer.setVolume(volume);
+      _audioPlayer.setLoopMode(loopAudio ? LoopMode.all : LoopMode.off);
+      await _audioPlayer.play();
     }
   }
 

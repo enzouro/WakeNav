@@ -6,16 +6,14 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
 import 'dart:async';
 import '../models/alarm.dart';
-import 'package:alarm/alarm.dart' as AlarmPlugin;
+import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TrackPage extends StatefulWidget {
   final List<Alarm> alarms;
   final Function(Alarm) updateAlarmStatus;
 
-  const TrackPage(
-      {Key? key, required this.alarms, required this.updateAlarmStatus})
-      : super(key: key);
+  const TrackPage({Key? key, required this.alarms, required this.updateAlarmStatus}) : super(key: key);
 
   @override
   _TrackPageState createState() => _TrackPageState();
@@ -25,122 +23,120 @@ class _TrackPageState extends State<TrackPage> {
   LatLng? _currentPosition;
   MapController _mapController = MapController();
   StreamSubscription<Position>? _positionStreamSubscription;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  Set<String> _triggeredAlarms = Set<String>();
 
   @override
   void initState() {
     super.initState();
     _startLocationTracking();
-    _initializeAlarm();
-    
   }
 
-  Future<void> _initializeAlarm() async {
-    await AlarmPlugin.Alarm.init();
-  }
 
   @override
   void dispose() {
     _positionStreamSubscription?.cancel();
+    _audioPlayer.dispose();
+    _triggeredAlarms.clear();
     super.dispose();
   }
 
-  void _startLocationTracking() {
-    _positionStreamSubscription = Geolocator.getPositionStream(
-      locationSettings: LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 10,
-      ),
-    ).listen((Position position) {
-      setState(() {
-        _currentPosition = LatLng(position.latitude, position.longitude);
-      });
-      _checkProximityToDestinations();
+void _startLocationTracking() {
+  _positionStreamSubscription = Geolocator.getPositionStream(
+    locationSettings: LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10,
+    ),
+  ).listen((Position position) {
+    setState(() {
+      _currentPosition = LatLng(position.latitude, position.longitude);
     });
-  }
+    _checkProximityToDestinations();
+  });
 
-  void _checkProximityToDestinations() {
-    if (_currentPosition == null) return;
+  // Add a timer to check proximity regularly, in case the location doesn't update often
+  Timer.periodic(Duration(seconds: 10), (_) {
+    _checkProximityToDestinations();
+  });
+}
 
-    for (var alarm in widget.alarms) {
-      if (!alarm.isActive) continue;
+void _checkProximityToDestinations() {
+  if (_currentPosition == null) return;
 
-      double distance = Geolocator.distanceBetween(
-        _currentPosition!.latitude,
-        _currentPosition!.longitude,
-        alarm.latitude,
-        alarm.longitude,
-      );
+  for (var alarm in widget.alarms) {
+    if (!alarm.isActive || _triggeredAlarms.contains(alarm.id)) continue;
 
-      if (distance <= alarm.distance) {
-        _showAlarmDialog(alarm);
-        break; // You might want to handle multiple triggered alarms differently
-      }
-    }
-  }
-
- void _showAlarmDialog(Alarm alarm) async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? soundFile = prefs.getString('selectedSound');
-    final double volume = prefs.getDouble('volume') ?? 0.5;
-    final bool vibrate = prefs.getBool('vibrate') ?? true;
-    final bool loopAudio = prefs.getBool('loopAudio') ?? true;
-
-    if (soundFile != null) {
-      final alarmSettings = AlarmPlugin.AlarmSettings(
-        id: alarm.id.hashCode,
-        dateTime: DateTime.now(),
-        assetAudioPath: soundFile,
-        loopAudio: loopAudio,
-        vibrate: vibrate,
-        volume: volume,
-        notificationTitle: 'Destination Reached',
-        notificationBody: 'You have reached: ${alarm.name}',
-      );
-      await AlarmPlugin.Alarm.set(alarmSettings: alarmSettings);
-    }
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Destination Reached'),
-          content: Text('You have reached your destination: ${alarm.name}!'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Stop'),
-              onPressed: () {
-                AlarmPlugin.Alarm.stop(alarm.id.hashCode);
-                alarm.deactivate();
-                widget.updateAlarmStatus(alarm);
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Snooze'),
-              onPressed: () async {
-                final int snoozeLength = prefs.getInt('snoozeLength') ?? 5;
-                final snoozeTime = DateTime.now().add(Duration(minutes: snoozeLength));
-                final snoozeSettings = AlarmPlugin.AlarmSettings(
-                  id: alarm.id.hashCode,
-                  dateTime: snoozeTime,
-                  assetAudioPath: soundFile!,
-                  loopAudio: loopAudio,
-                  vibrate: vibrate,
-                  volume: volume,
-                  notificationTitle: 'Snoozed Alarm',
-                  notificationBody: 'Snoozed alarm for ${alarm.name}',
-                );
-                await AlarmPlugin.Alarm.set(alarmSettings: snoozeSettings);
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
+    double distance = Geolocator.distanceBetween(
+      _currentPosition!.latitude,
+      _currentPosition!.longitude,
+      alarm.latitude,
+      alarm.longitude,
     );
-  }
 
+    if (distance <= alarm.distance) {
+      _triggeredAlarms.add(alarm.id);
+      _showAlarmDialog(alarm);
+      break; // Exit the loop after triggering the first alarm in range
+    }
+  }
+}
+
+void _showAlarmDialog(Alarm alarm) async {
+  final prefs = await SharedPreferences.getInstance();
+  final String? soundFile = prefs.getString('selectedSound');
+  final double volume = prefs.getDouble('volume') ?? 0.5;
+  final bool loopAudio = prefs.getBool('loopAudio') ?? true;
+
+  // Show the dialog first
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Destination Reached'),
+        content: Text('You have reached your destination: ${alarm.name}!'),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Stop'),
+            onPressed: () {
+              _audioPlayer.stop();
+              alarm.deactivate();
+              _triggeredAlarms.remove(alarm.id);
+              widget.updateAlarmStatus(alarm);
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text('Snooze'),
+            onPressed: () async {
+              _audioPlayer.stop();
+              final int snoozeLength = prefs.getInt('snoozeLength') ?? 5;
+              Navigator.of(context).pop();
+              Future.delayed(Duration(minutes: snoozeLength), () {
+                if (alarm.isActive) {
+                  _triggeredAlarms.remove(alarm.id);
+                  _checkProximityToDestinations();
+                }
+              });
+            },
+          ),
+        ],
+      );
+    },
+  );
+
+  // Play the audio after showing the dialog
+  if (soundFile != null) {
+    try {
+      await _audioPlayer.setAsset(soundFile);
+      _audioPlayer.setVolume(volume);
+      _audioPlayer.setLoopMode(loopAudio ? LoopMode.all : LoopMode.off);
+      await _audioPlayer.play();
+    } catch (e) {
+      print('Error playing audio: $e');
+    }
+  }
+}
   @override
   void didUpdateWidget(TrackPage oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -155,6 +151,11 @@ class _TrackPageState extends State<TrackPage> {
     if (_currentPosition != null) {
       _mapController.move(_currentPosition!, 14.0);
     }
+  }
+
+  void activateAlarm(Alarm alarm) {
+  alarm.isActive = true;
+  _triggeredAlarms.remove(alarm.id);
   }
 
   @override
