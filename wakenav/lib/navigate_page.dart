@@ -223,7 +223,7 @@ class _NavigatePageState extends State<NavigatePage> {
                   mapController: _mapController,
                   options: MapOptions(
                     initialCenter: _currentPosition!,
-                    initialZoom: 13.0,
+                    initialZoom: 15.0,
                     onLongPress: _handleLongPress,
                   ),
                   children: [
